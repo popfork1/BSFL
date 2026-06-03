@@ -1,0 +1,338 @@
+import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Trophy, Calendar, Shield, Zap, Users } from "lucide-react";
+import { Link } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { Team, Player } from "@shared/schema";
+
+interface PlayerStat {
+  id: string;
+  playerName: string;
+  team: string;
+  position: string;
+  passingYards: number;
+  passingTouchdowns: number;
+  interceptions: number;
+  completions: number;
+  attempts: number;
+  rushingYards: number;
+  rushingTouchdowns: number;
+  rushingAttempts: number;
+  receivingYards: number;
+  receivingTouchdowns: number;
+  receptions: number;
+  targets: number;
+  defensiveInterceptions: number;
+  passesDefended: number;
+  tackles: number;
+  defensiveSacks: number;
+  defensiveTouchdowns: number;
+  week: number;
+}
+
+interface StandingEntry {
+  id: string;
+  team: string;
+  wins: number;
+  losses: number;
+  pointDifferential: number;
+}
+
+interface GameResult {
+  id: string;
+  team1: string;
+  team2: string;
+  team1Score: number;
+  team2Score: number;
+  isFinal: boolean;
+  week: number;
+}
+
+const POSITIONS = ["QB", "RB", "WR", "K", "DEF"];
+
+function StatPill({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="flex flex-col items-center p-3 bg-white/5 rounded-2xl border border-white/5 min-w-[60px]">
+      <span className="text-lg font-black tabular-nums">{value}</span>
+      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{label}</span>
+    </div>
+  );
+}
+
+function PlayerCard({ player, stat }: { player: Player; stat?: PlayerStat }) {
+  const pos = player.position;
+  return (
+    <div className="p-5 bg-card/40 backdrop-blur rounded-3xl border border-border/40 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {player.number != null && (
+            <span className="text-2xl font-black italic text-muted-foreground/40">#{player.number}</span>
+          )}
+          <div>
+            <p className="font-black italic uppercase tracking-tight text-base">{player.name}</p>
+            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest mt-0.5">{pos || "—"}</Badge>
+          </div>
+        </div>
+      </div>
+      {stat && (
+        <div className="flex flex-wrap gap-2">
+          {pos === "QB" && (
+            <>
+              <StatPill label="Pass YDS" value={stat.passingYards ?? 0} />
+              <StatPill label="Pass TD" value={stat.passingTouchdowns ?? 0} />
+              <StatPill label="INT" value={stat.interceptions ?? 0} />
+              <StatPill label="CMP" value={`${stat.completions ?? 0}/${stat.attempts ?? 0}`} />
+            </>
+          )}
+          {pos === "RB" && (
+            <>
+              <StatPill label="Rush YDS" value={stat.rushingYards ?? 0} />
+              <StatPill label="Rush TD" value={stat.rushingTouchdowns ?? 0} />
+              <StatPill label="ATT" value={stat.rushingAttempts ?? 0} />
+              <StatPill label="REC YDS" value={stat.receivingYards ?? 0} />
+            </>
+          )}
+          {pos === "WR" && (
+            <>
+              <StatPill label="REC YDS" value={stat.receivingYards ?? 0} />
+              <StatPill label="REC TD" value={stat.receivingTouchdowns ?? 0} />
+              <StatPill label="REC" value={`${stat.receptions ?? 0}/${stat.targets ?? 0}`} />
+            </>
+          )}
+          {pos === "DEF" && (
+            <>
+              <StatPill label="INT" value={stat.defensiveInterceptions ?? 0} />
+              <StatPill label="PD" value={stat.passesDefended ?? 0} />
+              <StatPill label="Tackles" value={stat.tackles ?? 0} />
+              <StatPill label="Sacks" value={stat.defensiveSacks ?? 0} />
+              <StatPill label="DEF TD" value={stat.defensiveTouchdowns ?? 0} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function TeamDetail() {
+  const [match, params] = useRoute("/teams/:name");
+  if (!match) return null;
+
+  const teamName = decodeURIComponent(params?.name || "");
+
+  const { data: dbTeams = [] } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
+  const currentTeam = dbTeams.find((t) => t.name.toLowerCase() === teamName.toLowerCase());
+
+  const { data: activeSeason } = useQuery<{ number: number } | null>({ queryKey: ["/api/seasons/active"] });
+  const seasonNumber = activeSeason?.number ?? 1;
+
+  const { data: teamPlayers = [] } = useQuery<Player[]>({
+    queryKey: ["/api/teams", currentTeam?.id, "players"],
+    queryFn: async () => {
+      if (!currentTeam) return [];
+      const res = await fetch(`/api/teams/${currentTeam.id}/players`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: !!currentTeam,
+  });
+
+  const { data: allStats = [] } = useQuery<PlayerStat[]>({
+    queryKey: ["/api/player-stats"],
+  });
+
+  const { data: standings = [] } = useQuery<StandingEntry[]>({
+    queryKey: ["/api/standings", seasonNumber],
+    queryFn: async () => {
+      const res = await fetch(`/api/standings?season=${seasonNumber}`);
+      if (!res.ok) throw new Error("Failed to fetch standings");
+      return res.json();
+    },
+    enabled: activeSeason !== undefined,
+  });
+
+  const { data: games = [] } = useQuery<GameResult[]>({
+    queryKey: ["/api/games/all"],
+  });
+
+  const teamStanding = standings.find((s) => s.team === teamName);
+
+  const playersWithStats = teamPlayers.map((p) => ({
+    ...p,
+    stat: allStats.find((s) => s.playerName === p.name),
+  }));
+
+  const getByPosition = (pos: string) => playersWithStats.filter((p) => p.position === pos);
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+      <div className="max-w-7xl mx-auto p-6 md:p-10 space-y-12">
+        <Link href="/teams">
+          <Button variant="ghost" className="group h-10 px-4 rounded-full font-black uppercase tracking-widest text-[10px] border border-border/40 bg-card/40 backdrop-blur-xl hover:bg-card/60 transition-all">
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Teams
+          </Button>
+        </Link>
+
+        {/* Team Header */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent opacity-20 blur-3xl group-hover:opacity-30 transition-opacity duration-1000" />
+          <Card className="relative overflow-hidden border-none bg-card/40 backdrop-blur-3xl p-8 md:p-12 rounded-[40px]">
+            <div className="grid lg:grid-cols-[auto,1fr] gap-12 items-center relative z-10">
+              <div className="relative">
+                <div className="absolute -inset-8 bg-primary/10 blur-[80px] rounded-full animate-pulse" />
+                {currentTeam?.logo ? (
+                  <img
+                    src={currentTeam.logo}
+                    alt={teamName}
+                    className="w-48 h-48 object-contain relative z-10 drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-48 h-48 rounded-full bg-primary/10 flex items-center justify-center relative z-10">
+                    <Trophy className="w-20 h-20 text-primary/30" />
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 text-[11px] font-black uppercase tracking-widest">
+                    <Trophy className="w-3.5 h-3.5 mr-2" />
+                    Season {seasonNumber} Contender
+                  </Badge>
+                  <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] text-foreground">
+                    {teamName}
+                  </h1>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                  {[
+                    { label: "Wins", value: teamStanding?.wins ?? 0, color: "text-primary" },
+                    { label: "Losses", value: teamStanding?.losses ?? 0, color: "text-destructive" },
+                    {
+                      label: "Diff",
+                      value: `${(teamStanding?.pointDifferential ?? 0) > 0 ? "+" : ""}${teamStanding?.pointDifferential ?? 0}`,
+                      color: (teamStanding?.pointDifferential ?? 0) >= 0 ? "text-green-500" : "text-red-500",
+                    },
+                  ].map((stat, i) => (
+                    <div key={i} className="p-6 bg-white/5 backdrop-blur-md rounded-3xl border border-white/5">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                      <p className={`text-4xl font-black italic tabular-nums ${stat.color}`}>{stat.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="roster" className="w-full">
+          <TabsList className="flex flex-wrap h-auto gap-2 bg-transparent p-0 mb-8">
+            {[
+              { value: "roster", label: "Roster", icon: Users },
+              { value: "schedule", label: "Game History", icon: Calendar },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-border/40 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {/* ── Roster Tab ── */}
+          <TabsContent value="roster" className="space-y-10">
+            {teamPlayers.length === 0 ? (
+              <Card className="p-20 text-center border-dashed border-2 border-border/40 bg-transparent rounded-[40px]">
+                <Users className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">
+                  No players on roster. Add players in the Admin panel.
+                </p>
+              </Card>
+            ) : (
+              POSITIONS.map((pos) => {
+                const group = getByPosition(pos);
+                if (group.length === 0) return null;
+                return (
+                  <div key={pos} className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-widest">
+                        <Shield className="w-3 h-3 mr-1.5" />
+                        {pos === "QB" ? "Quarterbacks" : pos === "RB" ? "Running Backs" : pos === "WR" ? "Wide Receivers" : pos === "K" ? "Kickers" : "Defense"}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {group.map((p) => (
+                        <PlayerCard key={p.id} player={p} stat={p.stat} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </TabsContent>
+
+          {/* ── Game History Tab ── */}
+          <TabsContent value="schedule" className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {games
+                .filter((g) => g.team1 === teamName || g.team2 === teamName)
+                .sort((a, b) => b.week - a.week)
+                .map((game) => {
+                  const isTeam1 = game.team1 === teamName;
+                  const opponent = isTeam1 ? game.team2 : game.team1;
+                  const teamScore = isTeam1 ? game.team1Score : game.team2Score;
+                  const opponentScore = isTeam1 ? game.team2Score : game.team1Score;
+                  const isWinner = (teamScore ?? 0) > (opponentScore ?? 0);
+                  const isDraw = teamScore === opponentScore;
+                  const opponentTeam = dbTeams.find((t) => t.name === opponent);
+
+                  return (
+                    <Card key={game.id} className="p-8 bg-card/40 backdrop-blur-3xl border-border/40 rounded-[40px] relative overflow-hidden group">
+                      <div className="relative z-10 flex items-center justify-between gap-6">
+                        <div className="flex items-center gap-6">
+                          <div className="relative w-16 h-16 flex items-center justify-center bg-white/5 rounded-2xl border border-white/5">
+                            {opponentTeam?.logo ? (
+                              <img src={opponentTeam.logo} alt={opponent} className="w-10 h-10 object-contain" />
+                            ) : (
+                              <Trophy className="w-6 h-6 text-muted-foreground/20" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Week {game.week} vs</p>
+                            <h4 className="text-xl font-black italic uppercase tracking-tighter">{opponent}</h4>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Badge className={`px-3 py-1 rounded-full font-black uppercase tracking-widest text-[9px] ${
+                            !game.isFinal ? "bg-white/10 text-muted-foreground" :
+                            isWinner ? "bg-primary/20 text-primary" :
+                            isDraw ? "bg-white/10 text-foreground" : "bg-destructive/20 text-destructive"
+                          }`}>
+                            {!game.isFinal ? "Scheduled" : isWinner ? "Win" : isDraw ? "Draw" : "Loss"}
+                          </Badge>
+                          <p className="text-2xl font-black italic tabular-nums">{teamScore} – {opponentScore}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              {games.filter((g) => g.team1 === teamName || g.team2 === teamName).length === 0 && (
+                <div className="col-span-full py-20 text-center space-y-4">
+                  <Calendar className="w-12 h-12 text-muted-foreground/20 mx-auto" />
+                  <p className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">No game history for this team</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
