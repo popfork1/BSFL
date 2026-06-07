@@ -1,7 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Game } from "@shared/schema";
+import type { Game, Team } from "@shared/schema";
 import { formatInTimeZone } from "date-fns-tz";
 import { TEAMS } from "@/lib/teams";
 import { Video } from "lucide-react";
@@ -12,14 +13,17 @@ interface GameCardProps {
   onClick?: () => void;
 }
 
-const TeamLogo = ({ teamName, className }: { teamName: string; className?: string }) => {
-  const logo = TEAMS[teamName as keyof typeof TEAMS];
+const TeamLogo = ({ teamName, className, dbTeams }: { teamName: string; className?: string; dbTeams?: Team[] }) => {
+  const staticLogo = TEAMS[teamName as keyof typeof TEAMS];
+  const dbLogo = dbTeams?.find(t => t.name === teamName)?.logo;
+  const logo = staticLogo || dbLogo;
   if (!logo) return <div className={`${className} bg-muted rounded-full flex items-center justify-center text-[10px] font-bold`}>{teamName.substring(0, 2)}</div>;
   return <img src={logo} alt={teamName} className={`${className} object-contain`} />;
 };
 
 export function GameCard({ game, onClick }: GameCardProps) {
   const preferences = useUserPreferences();
+  const { data: dbTeams } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
 
   return (
     <Card 
@@ -59,7 +63,7 @@ export function GameCard({ game, onClick }: GameCardProps) {
           <div className="text-center space-y-4">
             <div className="relative inline-block group-hover:scale-110 transition-transform duration-700">
               <div className="absolute -inset-4 bg-primary/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <TeamLogo teamName={game.team1} className="w-16 h-16 sm:w-20 sm:h-20 relative z-10 drop-shadow-2xl" />
+              <TeamLogo teamName={game.team1} className="w-16 h-16 sm:w-20 sm:h-20 relative z-10 drop-shadow-2xl" dbTeams={dbTeams} />
             </div>
             <p className="font-black italic text-sm uppercase tracking-tighter text-foreground/90 leading-none">{game.team1}</p>
           </div>
@@ -81,7 +85,7 @@ export function GameCard({ game, onClick }: GameCardProps) {
           <div className="text-center space-y-4">
             <div className="relative inline-block group-hover:scale-110 transition-transform duration-700">
               <div className="absolute -inset-4 bg-primary/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <TeamLogo teamName={game.team2} className="w-16 h-16 sm:w-20 sm:h-20 relative z-10 drop-shadow-2xl" />
+              <TeamLogo teamName={game.team2} className="w-16 h-16 sm:w-20 sm:h-20 relative z-10 drop-shadow-2xl" dbTeams={dbTeams} />
             </div>
             <p className="font-black italic text-sm uppercase tracking-tighter text-foreground/90 leading-none">{game.team2}</p>
           </div>
