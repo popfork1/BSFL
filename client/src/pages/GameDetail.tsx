@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChatComponent } from "@/components/ChatComponent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FootballField } from "@/components/FootballField";
-import type { Game, ChatMessage, Prediction, Standings, StreamRequest, User, GamePlay } from "@shared/schema";
+import type { Game, ChatMessage, Prediction, Standings, StreamRequest, User, GamePlay, Team } from "@shared/schema";
 import { formatInTimeZone } from "date-fns-tz";
 import { ArrowLeft, AlertCircle, Video, ExternalLink, Activity, Trophy, Zap, Target, PlayCircle, Calendar } from "lucide-react";
 import { Link } from "wouter";
@@ -87,6 +87,8 @@ export default function GameDetail() {
     enabled: !!gameId,
     refetchInterval: 1000,
   });
+
+  const { data: dbTeams } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
 
   const requestStreamMutation = useMutation({
     mutationFn: async () => {
@@ -339,8 +341,8 @@ export default function GameDetail() {
                     <div className="flex-1 flex flex-col items-center md:items-start gap-6 w-full">
                       <div className="relative group/logo">
                         <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
-                        {preferences.showTeamLogos !== false && TEAMS[game.team2 as keyof typeof TEAMS] ? (
-                          <img src={TEAMS[game.team2 as keyof typeof TEAMS]} alt={game.team2} className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-2xl transition-transform group-hover/logo:scale-110" />
+                        {preferences.showTeamLogos !== false && (TEAMS[game.team2 as keyof typeof TEAMS] || dbTeams?.find(t => t.name === game.team2)?.logo) ? (
+                          <img src={TEAMS[game.team2 as keyof typeof TEAMS] || dbTeams?.find(t => t.name === game.team2)?.logo!} alt={game.team2} className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-2xl transition-transform group-hover/logo:scale-110" />
                         ) : (
                           <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full flex items-center justify-center relative z-10">
                             <Trophy className="w-12 h-12 text-muted-foreground/20" />
@@ -381,8 +383,8 @@ export default function GameDetail() {
                     <div className="flex-1 flex flex-col items-center md:items-end gap-6 w-full text-center md:text-right">
                       <div className="relative group/logo">
                         <div className="absolute -inset-4 bg-primary/20 blur-2xl rounded-full scale-0 group-hover/logo:scale-100 transition-transform duration-500" />
-                        {preferences.showTeamLogos !== false && TEAMS[game.team1 as keyof typeof TEAMS] ? (
-                          <img src={TEAMS[game.team1 as keyof typeof TEAMS]} alt={game.team1} className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-2xl transition-transform group-hover/logo:scale-110" />
+                        {preferences.showTeamLogos !== false && (TEAMS[game.team1 as keyof typeof TEAMS] || dbTeams?.find(t => t.name === game.team1)?.logo) ? (
+                          <img src={TEAMS[game.team1 as keyof typeof TEAMS] || dbTeams?.find(t => t.name === game.team1)?.logo!} alt={game.team1} className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-2xl transition-transform group-hover/logo:scale-110" />
                         ) : (
                           <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full flex items-center justify-center relative z-10">
                             <Trophy className="w-12 h-12 text-muted-foreground/20" />
