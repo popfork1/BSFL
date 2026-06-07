@@ -432,12 +432,18 @@ export default async function runApp(
           id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
           name VARCHAR(200) NOT NULL,
           team_id VARCHAR REFERENCES teams(id) ON DELETE CASCADE,
-          position VARCHAR(50),
-          jersey_number INTEGER,
+          role VARCHAR(20) DEFAULT 'player',
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         )
       `;
+
+      // Add role column to existing players tables (migration)
+      try {
+        await rawSql`ALTER TABLE players ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'player'`;
+      } catch (err) {
+        // Column likely already exists
+      }
 
       // Add season column to games table if it doesn't exist
       try {

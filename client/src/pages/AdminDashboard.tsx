@@ -669,11 +669,20 @@ function ScoresManager() {
 
 // ── Players Editor (per team) ──────────────────────────────────────────────
 
+const PLAYER_ROLES = [
+  { value: "player", label: "Player" },
+  { value: "head_coach", label: "Head Coach" },
+  { value: "franchise_owner", label: "Franchise Owner" },
+] as const;
+
+function roleLabel(role: string | null | undefined) {
+  return PLAYER_ROLES.find((r) => r.value === role)?.label ?? "Player";
+}
+
 function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string }) {
   const { toast } = useToast();
   const [playerName, setPlayerName] = useState("");
-  const [playerPosition, setPlayerPosition] = useState("QB");
-  const [playerNumber, setPlayerNumber] = useState("");
+  const [playerRole, setPlayerRole] = useState("player");
 
   const { data: players = [], isLoading } = useQuery<Player[]>({
     queryKey: ["/api/teams", teamId, "players"],
@@ -688,15 +697,14 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
     mutationFn: async () => {
       await apiRequest("POST", "/api/players", {
         name: playerName.trim(),
-        position: playerPosition,
-        number: playerNumber ? parseInt(playerNumber) : null,
+        role: playerRole,
         teamId,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "players"] });
       toast({ title: "Success", description: `${playerName} added to roster` });
-      setPlayerName(""); setPlayerNumber("");
+      setPlayerName("");
     },
     onError: () => toast({ title: "Error", description: "Failed to add player", variant: "destructive" }),
   });
@@ -724,24 +732,16 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
           data-testid={`input-player-name-${teamId}`}
           className="flex-1"
         />
-        <Select value={playerPosition} onValueChange={setPlayerPosition}>
-          <SelectTrigger className="w-28" data-testid={`select-player-pos-${teamId}`}>
+        <Select value={playerRole} onValueChange={setPlayerRole}>
+          <SelectTrigger className="w-40" data-testid={`select-player-role-${teamId}`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {["QB", "RB", "WR", "K", "DEF"].map((p) => (
-              <SelectItem key={p} value={p}>{p}</SelectItem>
+            {PLAYER_ROLES.map((r) => (
+              <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Input
-          placeholder="#"
-          type="number"
-          value={playerNumber}
-          onChange={(e) => setPlayerNumber(e.target.value)}
-          className="w-20"
-          data-testid={`input-player-number-${teamId}`}
-        />
         <Button
           onClick={() => { if (playerName.trim()) addMutation.mutate(); }}
           disabled={addMutation.isPending || !playerName.trim()}
@@ -762,15 +762,10 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
           {players.map((p) => (
             <div key={p.id} className="flex items-center justify-between p-3 bg-background rounded-md border" data-testid={`player-row-${p.id}`}>
               <div className="flex items-center gap-3">
-                {p.number != null && (
-                  <span className="text-xs font-black text-muted-foreground w-8">#{p.number}</span>
-                )}
                 <span className="font-semibold text-sm">{p.name}</span>
-                {p.position && (
-                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider">
-                    {p.position}
-                  </Badge>
-                )}
+                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider">
+                  {roleLabel(p.role)}
+                </Badge>
               </div>
               <Button
                 size="sm"
@@ -1062,6 +1057,7 @@ function StatsManager() {
   const weekOptions = buildWeekOptions(activeSeason);
 
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [statPosition, setStatPosition] = useState<StatPosition>("QB");
   const [rowEdits, setRowEdits] = useState<Record<string, Record<string, number>>>({});
   const [addingWeek, setAddingWeek] = useState(false);
   const [newWeek, setNewWeek] = useState(1);
@@ -1082,12 +1078,7 @@ function StatsManager() {
   }, {} as Record<string, PlayerWithTeam[]>);
 
   const selectedPlayer = allPlayers.find((p) => p.id === selectedPlayerId);
-  const playerPos = selectedPlayer
-    ? (STAT_POSITIONS.includes((selectedPlayer.position ?? "") as StatPosition)
-        ? (selectedPlayer.position as StatPosition)
-        : "QB")
-    : "QB";
-  const statFields = STAT_FIELDS[playerPos] ?? STAT_FIELDS.QB;
+  const statFields = STAT_FIELDS[statPosition] ?? STAT_FIELDS.QB;
 
   const playerStats = allStats
     .filter((s) => selectedPlayer && s.playerName === selectedPlayer.name && s.team === selectedPlayer.teamName)
@@ -1095,6 +1086,7 @@ function StatsManager() {
 
   const handlePlayerSelect = (id: string) => {
     setSelectedPlayerId(id);
+    setStatPosition("QB");
     setRowEdits({});
     setAddingWeek(false);
     setNewStats({});
@@ -1113,7 +1105,7 @@ function StatsManager() {
       const payload: any = {
         playerName: selectedPlayer.name,
         team: selectedPlayer.teamName,
-        position: playerPos,
+        position: statPosition,
         week: newWeek,
         ...Object.fromEntries(statFields.map(({ key }) => [key, newStats[key as string] ?? 0])),
       };
@@ -1173,7 +1165,7 @@ function StatsManager() {
                   <SelectLabel>{teamName}</SelectLabel>
                   {players.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.name}{p.position ? ` · ${p.position}` : ""}
+                      {p.name}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -1189,18 +1181,30 @@ function StatsManager() {
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h3 className="text-xl font-bold">{selectedPlayer.name}</h3>
-              <p className="text-sm text-muted-foreground">{selectedPlayer.teamName} · {playerPos}</p>
+              <p className="text-sm text-muted-foreground">{selectedPlayer.teamName}</p>
             </div>
-            <Button
-              size="sm"
-              className="gap-2"
-              onClick={() => { setAddingWeek(true); setNewStats({}); }}
-              disabled={addingWeek}
-              data-testid="button-add-week"
-            >
-              <Plus className="w-4 h-4" />
-              Add Week
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select value={statPosition} onValueChange={(v) => setStatPosition(v as StatPosition)}>
+                <SelectTrigger className="w-28" data-testid="select-stat-position">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAT_POSITIONS.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                className="gap-2"
+                onClick={() => { setAddingWeek(true); setNewStats({}); }}
+                disabled={addingWeek}
+                data-testid="button-add-week"
+              >
+                <Plus className="w-4 h-4" />
+                Add Week
+              </Button>
+            </div>
           </div>
 
           {/* Add-week row */}

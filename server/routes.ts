@@ -471,8 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .select({
           id: players.id,
           name: players.name,
-          position: players.position,
-          number: players.number,
+          role: players.role,
           teamId: players.teamId,
           teamName: teams.name,
         })

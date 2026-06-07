@@ -483,8 +483,7 @@ export type Team = typeof teams.$inferSelect;
 export const players = pgTable("players", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 100 }).notNull(),
-  number: integer("number"),
-  position: varchar("position", { length: 10 }),
+  role: varchar("role", { length: 20 }).default("player"), // "player", "head_coach", "franchise_owner"
   teamId: varchar("team_id").notNull().references(() => teams.id, { onDelete: 'cascade' }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -2,36 +2,11 @@ import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Trophy, Calendar, Shield, Zap, Users } from "lucide-react";
+import { ArrowLeft, Trophy, Calendar, Shield, Users } from "lucide-react";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Team, Player } from "@shared/schema";
-
-interface PlayerStat {
-  id: string;
-  playerName: string;
-  team: string;
-  position: string;
-  passingYards: number;
-  passingTouchdowns: number;
-  interceptions: number;
-  completions: number;
-  attempts: number;
-  rushingYards: number;
-  rushingTouchdowns: number;
-  rushingAttempts: number;
-  receivingYards: number;
-  receivingTouchdowns: number;
-  receptions: number;
-  targets: number;
-  defensiveInterceptions: number;
-  passesDefended: number;
-  tackles: number;
-  defensiveSacks: number;
-  defensiveTouchdowns: number;
-  week: number;
-}
 
 interface StandingEntry {
   id: string;
@@ -51,68 +26,30 @@ interface GameResult {
   week: number;
 }
 
-const POSITIONS = ["QB", "RB", "WR", "K", "DEF"];
+const ROLE_GROUPS = [
+  { role: "franchise_owner", label: "Franchise Owner" },
+  { role: "head_coach", label: "Head Coach" },
+  { role: "player", label: "Players" },
+] as const;
 
-function StatPill({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div className="flex flex-col items-center p-3 bg-white/5 rounded-2xl border border-white/5 min-w-[60px]">
-      <span className="text-lg font-black tabular-nums">{value}</span>
-      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-0.5">{label}</span>
-    </div>
-  );
+function roleBadgeLabel(role: string | null | undefined) {
+  if (role === "head_coach") return "Head Coach";
+  if (role === "franchise_owner") return "Franchise Owner";
+  return "Player";
 }
 
-function PlayerCard({ player, stat }: { player: Player; stat?: PlayerStat }) {
-  const pos = player.position;
+
+function PlayerCard({ player }: { player: Player }) {
   return (
-    <div className="p-5 bg-card/40 backdrop-blur rounded-3xl border border-border/40 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {player.number != null && (
-            <span className="text-2xl font-black italic text-muted-foreground/40">#{player.number}</span>
-          )}
-          <div>
-            <p className="font-black italic uppercase tracking-tight text-base">{player.name}</p>
-            <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest mt-0.5">{pos || "—"}</Badge>
-          </div>
+    <div className="p-5 bg-card/40 backdrop-blur rounded-3xl border border-border/40">
+      <div className="flex items-center gap-3">
+        <div>
+          <p className="font-black italic uppercase tracking-tight text-base">{player.name}</p>
+          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest mt-0.5">
+            {roleBadgeLabel(player.role)}
+          </Badge>
         </div>
       </div>
-      {stat && (
-        <div className="flex flex-wrap gap-2">
-          {pos === "QB" && (
-            <>
-              <StatPill label="Pass YDS" value={stat.passingYards ?? 0} />
-              <StatPill label="Pass TD" value={stat.passingTouchdowns ?? 0} />
-              <StatPill label="INT" value={stat.interceptions ?? 0} />
-              <StatPill label="CMP" value={`${stat.completions ?? 0}/${stat.attempts ?? 0}`} />
-            </>
-          )}
-          {pos === "RB" && (
-            <>
-              <StatPill label="Rush YDS" value={stat.rushingYards ?? 0} />
-              <StatPill label="Rush TD" value={stat.rushingTouchdowns ?? 0} />
-              <StatPill label="ATT" value={stat.rushingAttempts ?? 0} />
-              <StatPill label="REC YDS" value={stat.receivingYards ?? 0} />
-            </>
-          )}
-          {pos === "WR" && (
-            <>
-              <StatPill label="REC YDS" value={stat.receivingYards ?? 0} />
-              <StatPill label="REC TD" value={stat.receivingTouchdowns ?? 0} />
-              <StatPill label="REC" value={`${stat.receptions ?? 0}/${stat.targets ?? 0}`} />
-            </>
-          )}
-          {pos === "DEF" && (
-            <>
-              <StatPill label="INT" value={stat.defensiveInterceptions ?? 0} />
-              <StatPill label="PD" value={stat.passesDefended ?? 0} />
-              <StatPill label="Tackles" value={stat.tackles ?? 0} />
-              <StatPill label="Sacks" value={stat.defensiveSacks ?? 0} />
-              <StatPill label="DEF TD" value={stat.defensiveTouchdowns ?? 0} />
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -140,10 +77,6 @@ export default function TeamDetail() {
     enabled: !!currentTeam,
   });
 
-  const { data: allStats = [] } = useQuery<PlayerStat[]>({
-    queryKey: ["/api/player-stats"],
-  });
-
   const { data: standings = [] } = useQuery<StandingEntry[]>({
     queryKey: ["/api/standings", seasonNumber],
     queryFn: async () => {
@@ -160,12 +93,7 @@ export default function TeamDetail() {
 
   const teamStanding = standings.find((s) => s.team === teamName);
 
-  const playersWithStats = teamPlayers.map((p) => ({
-    ...p,
-    stat: allStats.find((s) => s.playerName === p.name),
-  }));
-
-  const getByPosition = (pos: string) => playersWithStats.filter((p) => p.position === pos);
+  const getByRole = (role: string) => teamPlayers.filter((p) => (p.role ?? "player") === role);
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
@@ -256,20 +184,20 @@ export default function TeamDetail() {
                 </p>
               </Card>
             ) : (
-              POSITIONS.map((pos) => {
-                const group = getByPosition(pos);
+              ROLE_GROUPS.map(({ role, label }) => {
+                const group = getByRole(role);
                 if (group.length === 0) return null;
                 return (
-                  <div key={pos} className="space-y-4">
+                  <div key={role} className="space-y-4">
                     <div className="flex items-center gap-3">
                       <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-widest">
                         <Shield className="w-3 h-3 mr-1.5" />
-                        {pos === "QB" ? "Quarterbacks" : pos === "RB" ? "Running Backs" : pos === "WR" ? "Wide Receivers" : pos === "K" ? "Kickers" : "Defense"}
+                        {label}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {group.map((p) => (
-                        <PlayerCard key={p.id} player={p} stat={p.stat} />
+                        <PlayerCard key={p.id} player={p} />
                       ))}
                     </div>
                   </div>
