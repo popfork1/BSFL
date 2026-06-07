@@ -1,0 +1,613 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index-dev.ts
+
+[1G[0KInitializing database schema...
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "sessions" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "users" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "games" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "news" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "chat_messages" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "pickems" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "pickem_rules" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "standings" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "playoff_matches" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "changelogs" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "predictions" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "bracket_images" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "stream_requests" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "settings" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "partners" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "user_preferences" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "update_plans" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "bets" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "parlays" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "seasons" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "teams" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+{
+  severity_local: [32m'NOTICE'[39m,
+  severity: [32m'NOTICE'[39m,
+  code: [32m'42P07'[39m,
+  message: [32m'relation "players" already exists, skipping'[39m,
+  file: [32m'parse_utilcmd.c'[39m,
+  line: [32m'208'[39m,
+  routine: [32m'transformCreateStmt'[39m
+}
+Database schema initialized successfully
+6:47:01 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+6:47:11 PM [express] GET /api/auth/user 401 in 4ms :: {"message":"Unauthorized"}
+6:47:11 PM [express] GET /api/user/preferences 401 in 2ms :: {"message":"Unauthorized"}
+6:47:11 PM [express] GET /api/games/all 304 in 28ms :: []
+6:47:11 PM [express] GET /api/settings/maintenance-mode 304 in 59ms :: {"enabled":false}
+6:47:11 PM [express] GET /api/news 304 in 197ms :: []
+6:47:11 PM [express] GET /api/seasons/active 304 in 44ms
+6:47:11 PM [express] GET /api/games/current 304 in 22ms :: []
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:47:11 PM [express] GET /api/settings/breaking-news 304 in 129ms :: {"message":"","active":false,"e…
+6:48:02 PM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+6:48:02 PM [express] GET /api/user/preferences 401 in 1ms :: {"message":"Unauthorized"}
+6:48:02 PM [express] GET /api/games/all 304 in 30ms :: []
+6:48:02 PM [express] GET /api/news 304 in 29ms :: []
+6:48:02 PM [express] GET /api/settings/maintenance-mode 304 in 47ms :: {"enabled":false}
+6:48:02 PM [express] GET /api/games/current 304 in 24ms :: []
+6:48:02 PM [express] GET /api/seasons/active 304 in 48ms
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:48:02 PM [express] GET /api/settings/breaking-news 304 in 126ms :: {"message":"","active":false,"e…
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:49:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x3)[39m
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:50:16 PM [express] GET /api/settings/breaking-news 304 in 129ms :: {"message":"","active":false,"e…
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x4)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x5)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x6)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:47 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/AdminDashboard.tsx, /src/index.css[22m [33m(x7)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:50:54 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x4)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:37 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x5)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:44 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x6)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:51:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x7)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m6:52:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/TeamDetail.tsx, /src/index.css[22m [33m(x8)[39m
+6:52:19 PM [express] GET /api/auth/user 401 in 3ms :: {"message":"Unauthorized"}
+6:52:19 PM [express] GET /api/user/preferences 401 in 1ms :: {"message":"Unauthorized"}
+6:52:19 PM [express] GET /api/games/all 304 in 24ms :: []
+6:52:19 PM [express] GET /api/news 304 in 25ms :: []
+6:52:19 PM [express] GET /api/settings/maintenance-mode 304 in 44ms :: {"enabled":false}
+6:52:19 PM [express] GET /api/games/current 304 in 23ms :: []
+6:52:19 PM [express] GET /api/seasons/active 304 in 42ms
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:52:19 PM [express] GET /api/settings/breaking-news 304 in 126ms :: {"message":"","active":false,"e…
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:58:28 PM [express] GET /api/settings/breaking-news 304 in 1118ms :: {"message":"","active":false,"…
+6:58:42 PM [express] GET /api/games/all 304 in 39ms :: []
+6:58:42 PM [express] GET /api/news 304 in 203ms :: []
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+6:58:48 PM [express] GET /api/settings/breaking-news 304 in 126ms :: {"message":"","active":false,"e…
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+7:00:01 PM [express] GET /api/settings/breaking-news 304 in 127ms :: {"message":"","active":false,"e…
+7:03:01 PM [express] GET /api/games/all 304 in 25ms :: []
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+7:03:01 PM [express] GET /api/settings/breaking-news 304 in 133ms :: {"message":"","active":false,"e…
+7:03:02 PM [express] GET /api/news 304 in 26ms :: []
+[API] GET /api/settings/breaking-news: message="null", active=false, expiresAt=null
+7:03:22 PM [express] GET /api/settings/breaking-news 304 in 124ms :: {"message":"","active":false,"e…
