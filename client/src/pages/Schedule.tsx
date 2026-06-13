@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type { Game } from "@shared/schema";
+import type { Game, Team } from "@shared/schema";
 import { isFuture, isPast } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { Calendar, MapPin, AlertCircle, Search, Clock, Trophy } from "lucide-react";
@@ -12,11 +12,24 @@ import { TEAMS } from "@/lib/teams";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useState } from "react";
 
+const TeamLogo = ({ teamName, dbTeams }: { teamName: string; dbTeams?: Team[] }) => {
+  const staticLogo = TEAMS[teamName as keyof typeof TEAMS];
+  const dbLogo = dbTeams?.find(t => t.name === teamName)?.logo;
+  const logo = staticLogo || dbLogo;
+  if (!logo) return (
+    <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-[10px] font-black uppercase">
+      {teamName.substring(0, 2)}
+    </div>
+  );
+  return <img src={logo} alt={teamName} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
+};
+
 export default function Schedule() {
   const [searchQuery, setSearchQuery] = useState("");
   const [primetimeFilter, setPrimetimeFilter] = useState<"all" | "primetime" | "regular">("all");
   const preferences = useUserPreferences();
   const showLogos = preferences.showTeamLogos !== false;
+  const { data: dbTeams } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
   
   const { data: activeSeason } = useQuery<{ number: number; weekNames?: Record<string, string> } | null>({
     queryKey: ["/api/seasons/active"],
@@ -125,14 +138,16 @@ export default function Schedule() {
                     <Card key={game.id} className="group p-6 bg-card/40 backdrop-blur-xl border-border/40 hover:bg-card/60 transition-all duration-300 rounded-[32px] overflow-hidden">
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative z-10">
                         <div className="flex items-center gap-8 flex-1">
-                          <div className="flex items-center -space-x-4">
-                            <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-2xl group-hover:scale-110 transition-transform">
-                              <img src={TEAMS[game.team2 as keyof typeof TEAMS]} className="w-full h-full object-contain" />
+                          {showLogos && (
+                            <div className="flex items-center -space-x-4">
+                              <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-2xl group-hover:scale-110 transition-transform">
+                                <TeamLogo teamName={game.team2} dbTeams={dbTeams} />
+                              </div>
+                              <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-2xl group-hover:scale-110 transition-transform">
+                                <TeamLogo teamName={game.team1} dbTeams={dbTeams} />
+                              </div>
                             </div>
-                            <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center p-2.5 shadow-2xl group-hover:scale-110 transition-transform">
-                              <img src={TEAMS[game.team1 as keyof typeof TEAMS]} className="w-full h-full object-contain" />
-                            </div>
-                          </div>
+                          )}
                           <div className="space-y-1">
                             <h3 className="text-xl font-black italic uppercase tracking-tight">
                               {game.team2} <span className="text-muted-foreground/30 text-base not-italic mx-2">VS</span> {game.team1}
