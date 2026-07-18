@@ -1,8 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, Target, BarChart3, Shield } from "lucide-react";
+import { Zap, Target, BarChart3, Shield, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlayerStat {
     id: string;
@@ -50,6 +54,10 @@ interface PlayerStat {
 }
 
 export default function Stats() {
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = isAuthenticated && (user as any)?.role === "admin";
+  const { toast } = useToast();
+
   const { data: playerStats = [] } = useQuery<PlayerStat[]>({
     queryKey: ["/api/player-stats"],
   });
@@ -59,6 +67,21 @@ export default function Stats() {
   });
 
   const seasonLabel = activeSeason?.name || (activeSeason ? `Season ${activeSeason.number}` : "Current Season");
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/player-stats/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/player-stats"] });
+      toast({ title: "Deleted", description: "Stat entry removed" });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to delete stat", variant: "destructive" }),
+  });
+
+  const handleDelete = (id: string, playerName: string) => {
+    if (confirm(`Delete this stat entry for ${playerName}?`)) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   // Get player leaderboards by position
   const getLeaderboard = (position: string) => {
@@ -150,6 +173,11 @@ export default function Stats() {
                         <p className="text-xl font-black italic tabular-nums text-destructive">{player.interceptions || 0}</p>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => handleDelete(player.id, player.playerName)} disabled={deleteMutation.isPending}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -186,6 +214,11 @@ export default function Stats() {
                         <p className="text-xl font-black italic tabular-nums">{player.rushingAttempts || 0}</p>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => handleDelete(player.id, player.playerName)} disabled={deleteMutation.isPending}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -222,6 +255,11 @@ export default function Stats() {
                         <p className="text-xl font-black italic tabular-nums">{player.receptions || 0}</p>
                       </div>
                     </div>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => handleDelete(player.id, player.playerName)} disabled={deleteMutation.isPending}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -269,6 +307,11 @@ export default function Stats() {
                           <p className="text-xl font-black italic tabular-nums">{player.passesDefended || 0}</p>
                         </div>
                       </div>
+                    {isAdmin && (
+                      <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => handleDelete(player.id, player.playerName)} disabled={deleteMutation.isPending}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                     </div>
                   ))}
                 {playerStats.filter((p) => ["LB", "DB", "S", "DE", "DT", "CB", "FS", "SS", "DEF"].includes(p.position?.toUpperCase())).length === 0 && (
