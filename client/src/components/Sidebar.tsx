@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { createContext, useContext, useState, ReactNode } from "react";
 
+import file_000000005aac71f582d04d1ad8f846ab from "@assets/file_000000005aac71f582d04d1ad8f846ab.png";
+
 interface SidebarContextType {
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
@@ -63,7 +65,7 @@ export function Sidebar() {
         <Link href="/">
           <div className="flex items-center gap-3 cursor-pointer group" data-testid="link-logo">
             <img 
-              src="/logo.png" 
+              src={file_000000005aac71f582d04d1ad8f846ab} 
               alt="RFN" 
               className="w-10 h-10 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300"
               style={{ boxShadow: '0 0 12px rgba(255,87,34,0.35)' }}
@@ -146,7 +148,6 @@ export function Sidebar() {
           )}
         </div>
       </div>
-
       {/* Mobile scrollable nav */}
       <nav className="lg:hidden flex items-center overflow-x-auto no-scrollbar h-12 px-4 gap-1"
         style={{ borderTop: '1px solid rgba(255,87,34,0.12)', background: 'rgba(20,8,35,0.6)' }}
