@@ -19,7 +19,7 @@ interface StandingsEntry {
   wins: number;
   losses: number;
   pointDifferential?: number;
-  division: "AFC_East" | "AFC_West" | "NFC_East" | "NFC_West";
+  division: "North" | "South";
   manualOrder?: number;
 }
 
@@ -29,10 +29,21 @@ interface DropZone {
   targetId: string;
 }
 
-const CONFERENCES = [
-  { name: "AFC", color: "text-blue-500", bg: "bg-blue-500/5", divisions: [{ id: "AFC_East", label: "East" }, { id: "AFC_West", label: "West" }] },
-  { name: "NFC", color: "text-red-500", bg: "bg-red-500/5", divisions: [{ id: "NFC_East", label: "East" }, { id: "NFC_West", label: "West" }] },
-];
+const DIVISIONS = [
+  { id: "North", label: "North", color: "text-blue-400", bg: "bg-blue-500/5" },
+  { id: "South", label: "South", color: "text-orange-400", bg: "bg-orange-500/5" },
+] as const;
+
+/** Renders a team logo — handles image URLs, relative paths, data URIs, and emoji/text. */
+function TeamLogo({ logo, name, size = "md" }: { logo?: string | null; name: string; size?: "sm" | "md" }) {
+  if (!logo) return <Trophy className={`${size === "sm" ? "w-4 h-4" : "w-5 h-5"} text-muted-foreground/40`} />;
+  const isUrl = logo.startsWith("http") || logo.startsWith("/") || logo.startsWith("data:");
+  if (isUrl) {
+    return <img src={logo} alt={name} className="w-full h-full object-contain drop-shadow-lg" />;
+  }
+  // emoji or short text
+  return <span className={`${size === "sm" ? "text-base" : "text-xl"} leading-none select-none`}>{logo}</span>;
+}
 
 export default function Standings() {
   const { isAuthenticated, user } = useAuth();
@@ -40,19 +51,16 @@ export default function Standings() {
   const isAdmin = isAuthenticated && (user as any)?.role === "admin";
   const [standings, setStandings] = useState<StandingsEntry[]>([]);
   const [newTeam, setNewTeam] = useState("");
-
-  const { data: dbTeams } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
-  const availableTeams = (dbTeams ?? []).map((t) => t.name).sort();
-  const [newDivision, setNewDivision] = useState<"AFC_East" | "AFC_West" | "NFC_East" | "NFC_West" | "">("");
+  const [newDivision, setNewDivision] = useState<"North" | "South" | "">("");
   const [editingPD, setEditingPD] = useState<Record<string, string | number>>({});
   const [editingWL, setEditingWL] = useState<Record<string, { wins: string; losses: string }>>({});
   const [draggedTeam, setDraggedTeam] = useState<string | null>(null);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
 
-  const { data: activeSeason } = useQuery({
-    queryKey: ["/api/seasons/active"],
-  });
+  const { data: dbTeams } = useQuery<Team[]>({ queryKey: ["/api/teams"] });
+  const availableTeams = (dbTeams ?? []).map((t) => t.name).sort();
 
+  const { data: activeSeason } = useQuery({ queryKey: ["/api/seasons/active"] });
   const activeSeasionNum = (activeSeason as any)?.number ?? 1;
 
   const { data: dbStandings, isLoading } = useQuery({
@@ -125,8 +133,8 @@ export default function Standings() {
   const addTeam = () => {
     if (!isAdmin || !newTeam.trim() || !newDivision) return;
     const divisionTeams = standings.filter(s => s.division === newDivision);
-    const maxOrder = divisionTeams.length > 0 
-      ? Math.max(...divisionTeams.map(s => s.manualOrder ?? -1)) 
+    const maxOrder = divisionTeams.length > 0
+      ? Math.max(...divisionTeams.map(s => s.manualOrder ?? -1))
       : -1;
     const newEntry: StandingsEntry = {
       id: Date.now().toString(),
@@ -135,7 +143,7 @@ export default function Standings() {
       wins: 0,
       losses: 0,
       pointDifferential: 0,
-      division: newDivision as any,
+      division: newDivision as "North" | "South",
       manualOrder: maxOrder + 1,
     };
     setStandings([...standings, newEntry]);
@@ -161,11 +169,7 @@ export default function Standings() {
   const getDivisionStandings = (division: string) => {
     return [...standings]
       .filter((entry) => entry.division === division)
-      .sort((a, b) => {
-        const aOrder = a.manualOrder ?? 999;
-        const bOrder = b.manualOrder ?? 999;
-        return aOrder - bOrder;
-      });
+      .sort((a, b) => (a.manualOrder ?? 999) - (b.manualOrder ?? 999));
   };
 
   const handleDragStart = (e: React.DragEvent, teamId: string) => {
@@ -176,15 +180,12 @@ export default function Standings() {
   const handleDragOver = (e: React.DragEvent, targetTeamId: string) => {
     e.preventDefault();
     if (!draggedTeam || draggedTeam === targetTeamId) return;
-    
     const targetEntry = standings.find(s => s.id === targetTeamId);
     if (!targetEntry) return;
-
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const midpoint = rect.top + rect.height / 2;
     setDropZone({
       divisionId: targetEntry.division,
-      position: e.clientY < midpoint ? 'above' : 'below',
+      position: e.clientY < rect.top + rect.height / 2 ? 'above' : 'below',
       targetId: targetTeamId,
     });
   };
@@ -192,27 +193,18 @@ export default function Standings() {
   const handleDrop = (e: React.DragEvent, targetTeamId: string) => {
     e.preventDefault();
     if (draggedTeam === targetTeamId || !draggedTeam) return;
-
     const draggedEntry = standings.find(e => e.id === draggedTeam);
     const targetEntry = standings.find(e => e.id === targetTeamId);
-    
     if (!draggedEntry || !targetEntry || draggedEntry.division !== targetEntry.division) {
       setDropZone(null);
       return;
     }
-
     const divisionItems = getDivisionStandings(draggedEntry.division);
     const filteredItems = divisionItems.filter(item => item.id !== draggedTeam);
     const targetIndex = filteredItems.findIndex(item => item.id === targetTeamId);
-    let insertIndex = dropZone?.position === 'below' ? targetIndex + 1 : targetIndex;
-    
+    const insertIndex = dropZone?.position === 'below' ? targetIndex + 1 : targetIndex;
     filteredItems.splice(insertIndex, 0, draggedEntry);
-    
-    const reorderedItems = filteredItems.map((item, idx) => ({
-      ...item,
-      manualOrder: idx,
-    }));
-    
+    const reorderedItems = filteredItems.map((item, idx) => ({ ...item, manualOrder: idx }));
     setStandings(standings.map(entry => reorderedItems.find(r => r.id === entry.id) || entry));
     reorderedItems.forEach(item => upsertMutation.mutate(item));
     setDropZone(null);
@@ -220,6 +212,7 @@ export default function Standings() {
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-10 max-w-7xl mx-auto space-y-8 sm:space-y-12">
+      {/* Header */}
       <div className="space-y-4">
         <Badge className="bg-primary/10 text-primary border-none font-black uppercase tracking-[0.2em] text-[10px] px-4 py-1.5 rounded-full w-fit">
           League Rankings
@@ -229,6 +222,7 @@ export default function Standings() {
         </h1>
       </div>
 
+      {/* Admin: Add Team */}
       {isAdmin && (
         <Card className="p-8 bg-card/40 backdrop-blur-xl border-border/40 rounded-[32px] space-y-8 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -236,11 +230,11 @@ export default function Standings() {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-1.5 h-6 bg-accent rounded-full" />
-            <h2 className="text-xl font-black italic uppercase tracking-tight">Add Team to Rank</h2>
+            <h2 className="text-xl font-black italic uppercase tracking-tight">Add Team to Division</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Team Selection</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Team</Label>
               <Select value={newTeam} onValueChange={setNewTeam}>
                 <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl">
                   <SelectValue placeholder="Select Team" />
@@ -251,7 +245,9 @@ export default function Standings() {
                     return (
                       <SelectItem key={team} value={team} className="rounded-xl">
                         <div className="flex items-center gap-3">
-                          {logo && <img src={logo} className="w-5 h-5 object-contain" />}
+                          <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                            <TeamLogo logo={logo} name={team} size="sm" />
+                          </span>
                           <span className="font-bold">{team}</span>
                         </div>
                       </SelectItem>
@@ -261,166 +257,184 @@ export default function Standings() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Conference Division</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Division</Label>
               <Select value={newDivision} onValueChange={(v) => setNewDivision(v as any)}>
                 <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl">
                   <SelectValue placeholder="Select Division" />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl border-border/40">
-                  {CONFERENCES.map((conf) => (
-                    <div key={conf.name}>
-                      <div className={`text-[10px] font-black uppercase tracking-[0.2em] px-4 py-3 ${conf.color}`}>{conf.name}</div>
-                      {conf.divisions.map((div) => (
-                        <SelectItem key={div.id} value={div.id} className="rounded-xl">{div.label}</SelectItem>
-                      ))}
-                    </div>
+                  {DIVISIONS.map((div) => (
+                    <SelectItem key={div.id} value={div.id} className="rounded-xl font-bold">
+                      {div.label} Division
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-end">
-              <Button onClick={addTeam} className="w-full h-12 bg-primary hover:scale-105 transition-transform rounded-2xl font-black uppercase tracking-widest text-xs">
-                Add to Rankings
+              <Button
+                onClick={addTeam}
+                disabled={!newTeam || !newDivision || upsertMutation.isPending}
+                className="w-full h-12 bg-primary hover:scale-105 transition-transform rounded-2xl font-black uppercase tracking-widest text-xs"
+              >
+                Add to Standings
               </Button>
             </div>
           </div>
         </Card>
       )}
 
-      <div className="grid gap-16">
-        {CONFERENCES.map((conference) => (
-          <div key={conference.name} className="space-y-8">
-            <div className="flex items-center gap-6">
-              <h2 className={`text-4xl font-black italic uppercase tracking-tighter ${conference.color}`}>{conference.name} <span className="text-foreground/20">Conference</span></h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-border/50 to-transparent" />
-            </div>
+      {/* Divisions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {DIVISIONS.map((division) => {
+          const divisionStandings = getDivisionStandings(division.id);
+          return (
+            <div key={division.id} className="space-y-4">
+              {/* Division header */}
+              <div className="flex items-center gap-4 px-2">
+                <Star className={`w-4 h-4 ${division.color} fill-current shrink-0`} />
+                <h2 className={`text-2xl font-black italic uppercase tracking-tighter ${division.color}`}>
+                  {division.label} <span className="text-foreground/20 text-lg">Division</span>
+                </h2>
+                <div className="flex-1 h-px bg-gradient-to-r from-border/50 to-transparent" />
+                <Badge variant="outline" className={`text-[10px] font-black uppercase tracking-widest border-border/30 ${division.color}`}>
+                  {divisionStandings.length} {divisionStandings.length === 1 ? "team" : "teams"}
+                </Badge>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {(() => {
-                let cumulativeIndex = 0;
-                return conference.divisions.map((division) => {
-                  const divisionStandings = getDivisionStandings(division.id);
-                  const startIndex = cumulativeIndex;
-                  cumulativeIndex += divisionStandings.length;
-                  return (
-                    <div key={division.id} className="space-y-4">
-                      <div className="flex items-center gap-3 px-4">
-                        <Star className={`w-4 h-4 ${conference.color} fill-current`} />
-                        <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">{division.label}</h3>
-                      </div>
+              <Card className="bg-card/30 backdrop-blur-xl border-border/40 rounded-[32px] overflow-hidden">
+                {divisionStandings.length === 0 ? (
+                  <div className="py-16 text-center text-muted-foreground/40">
+                    <Trophy className="w-8 h-8 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-black uppercase tracking-widest">No teams yet</p>
+                    {isAdmin && <p className="text-xs mt-1 opacity-60">Use the form above to add teams</p>}
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-border/40 text-[11px] font-black uppercase tracking-[0.2em] text-white bg-white/5">
+                          <th className="px-5 py-4 w-14 text-center">#</th>
+                          <th className="px-5 py-4">Team</th>
+                          <th className="px-5 py-4 text-center">W-L</th>
+                          <th className="px-5 py-4 text-center">PD</th>
+                          {isAdmin && <th className="px-5 py-4 text-center">Ops</th>}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/20">
+                        {divisionStandings.map((entry, idx) => {
+                          const teamData = dbTeams?.find(t => t.name === entry.team);
+                          return (
+                            <tr
+                              key={entry.id}
+                              draggable={isAdmin}
+                              onDragStart={(e) => handleDragStart(e, entry.id)}
+                              onDragOver={(e) => handleDragOver(e, entry.id)}
+                              onDrop={(e) => handleDrop(e, entry.id)}
+                              onDragEnd={() => { setDraggedTeam(null); setDropZone(null); }}
+                              className={`group hover:bg-white/5 transition-colors ${dropZone?.targetId === entry.id ? 'bg-primary/5' : ''}`}
+                            >
+                              {/* Rank */}
+                              <td className="px-5 py-4 text-center">
+                                {isAdmin ? (
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <span className="text-sm font-black text-white">{idx + 1}</span>
+                                    <GripVertical className="w-3.5 h-3.5 opacity-0 group-hover:opacity-60 transition-opacity cursor-grab text-white" />
+                                  </div>
+                                ) : (
+                                  <span className={`text-sm font-black ${idx === 0 ? 'text-yellow-400' : idx === 1 ? 'text-slate-300' : idx === 2 ? 'text-amber-600' : 'text-white/50'}`}>
+                                    {idx + 1}
+                                  </span>
+                                )}
+                              </td>
 
-                      <Card className="bg-card/30 backdrop-blur-xl border-border/40 rounded-[32px] overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left">
-                            <thead>
-                              <tr className="border-b border-border/40 text-[12px] font-black uppercase tracking-[0.2em] text-white bg-white/5">
-                                <th className="px-6 py-4 w-16 text-center">#</th>
-                                <th className="px-6 py-4">Team</th>
-                                <th className="px-6 py-4 text-center">W-L</th>
-                                <th className="px-6 py-4 text-center">PD</th>
-                                {isAdmin && <th className="px-6 py-4 text-center">Ops</th>}
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/20">
-                              {divisionStandings.map((entry, idx) => (
-                                <tr 
-                                  key={entry.id}
-                                  draggable={isAdmin}
-                                  onDragStart={(e) => handleDragStart(e, entry.id)}
-                                  onDragOver={(e) => handleDragOver(e, entry.id)}
-                                  onDrop={(e) => handleDrop(e, entry.id)}
-                                  className={`group hover:bg-white/5 transition-colors relative ${dropZone?.targetId === entry.id ? 'bg-primary/5' : ''}`}
-                                >
-                                  <td className="px-6 py-5 text-center font-black italic text-xl text-white/40">
-                                    {isAdmin ? (
-                                      <div className="flex flex-col items-center gap-1">
-                                        <span className="text-sm not-italic text-white">{idx + 1}</span>
-                                        <GripVertical className="w-4 h-4 mx-auto opacity-0 group-hover:opacity-100 transition-opacity cursor-grab text-white" />
-                                      </div>
-                                    ) : <span className="text-white">{idx + 1}</span>}
-                                  </td>
-                                  <td className="px-6 py-5">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center p-2 group-hover:scale-110 transition-transform">
-                                        {dbTeams?.find(t => t.name === entry.team)?.logo
-                                          ? <img src={dbTeams.find(t => t.name === entry.team)!.logo!} className="w-full h-full object-contain drop-shadow-lg" />
-                                          : <Trophy className="w-5 h-5 text-muted-foreground/40" />}
-                                      </div>
-                                      <span className="font-black italic uppercase tracking-tight text-base text-white">{entry.team}</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-5 text-center">
-                                    {isAdmin ? (
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Input
-                                          type="number"
-                                          value={editingWL[entry.id]?.wins ?? entry.wins}
-                                          onChange={(e) => setEditingWL((prev) => ({ ...prev, [entry.id]: { wins: e.target.value, losses: prev[entry.id]?.losses ?? String(entry.losses) } }))}
-                                          onBlur={(e) => {
-                                            const val = parseInt(e.target.value) || 0;
-                                            updateEntry(entry.id, "wins", val);
-                                            setEditingWL((prev) => { const n = { ...prev }; delete n[entry.id]; return n; });
-                                          }}
-                                          className="w-12 h-8 text-center bg-white/5 border-none font-bold p-0 text-white"
-                                        />
-                                        <span className="text-white opacity-30">/</span>
-                                        <Input
-                                          type="number"
-                                          value={editingWL[entry.id]?.losses ?? entry.losses}
-                                          onChange={(e) => setEditingWL((prev) => ({ ...prev, [entry.id]: { losses: e.target.value, wins: prev[entry.id]?.wins ?? String(entry.wins) } }))}
-                                          onBlur={(e) => {
-                                            const val = parseInt(e.target.value) || 0;
-                                            updateEntry(entry.id, "losses", val);
-                                            setEditingWL((prev) => { const n = { ...prev }; delete n[entry.id]; return n; });
-                                          }}
-                                          className="w-12 h-8 text-center bg-white/5 border-none font-bold p-0 text-white"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <span className="font-black tabular-nums text-lg text-white">{entry.wins}-{entry.losses}</span>
-                                    )}
-                                  </td>
-                                  <td className="px-6 py-5 text-center">
-                                    {isAdmin ? (
-                                      <Input 
-                                        type="text" 
-                                        value={editingPD[entry.id] ?? entry.pointDifferential ?? 0}
-                                        onChange={(e) => setEditingPD({ ...editingPD, [entry.id]: e.target.value })}
-                                        onBlur={(e) => {
-                                          const val = parseInt(e.target.value) || 0;
-                                          updateEntry(entry.id, "pointDifferential", val);
-                                          const newEditingPD = { ...editingPD };
-                                          delete newEditingPD[entry.id];
-                                          setEditingPD(newEditingPD);
-                                        }}
-                                        className="w-14 h-8 mx-auto text-center bg-white/5 border-none font-bold p-0 text-white"
-                                      />
-                                    ) : (
-                                      <span className={`font-bold tabular-nums text-sm ${entry.pointDifferential! >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {entry.pointDifferential! > 0 ? '+' : ''}{entry.pointDifferential}
-                                      </span>
-                                    )}
-                                  </td>
-                                  {isAdmin && (
-                                    <td className="px-6 py-5 text-center">
-                                      <Button variant="ghost" size="icon" onClick={() => deleteEntry(entry.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </Card>
-                    </div>
-                  );
-                });
-              })()}
+                              {/* Team */}
+                              <td className="px-5 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center p-1.5 group-hover:scale-110 transition-transform shrink-0">
+                                    <TeamLogo logo={teamData?.logo} name={entry.team} />
+                                  </div>
+                                  <span className="font-black italic uppercase tracking-tight text-sm text-white leading-tight">{entry.team}</span>
+                                </div>
+                              </td>
+
+                              {/* W-L */}
+                              <td className="px-5 py-4 text-center">
+                                {isAdmin ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Input
+                                      type="number"
+                                      value={editingWL[entry.id]?.wins ?? entry.wins}
+                                      onChange={(e) => setEditingWL((prev) => ({ ...prev, [entry.id]: { wins: e.target.value, losses: prev[entry.id]?.losses ?? String(entry.losses) } }))}
+                                      onBlur={(e) => {
+                                        updateEntry(entry.id, "wins", parseInt(e.target.value) || 0);
+                                        setEditingWL((prev) => { const n = { ...prev }; delete n[entry.id]; return n; });
+                                      }}
+                                      className="w-11 h-7 text-center bg-white/5 border-none font-bold p-0 text-white text-sm"
+                                    />
+                                    <span className="text-white/30 text-xs">-</span>
+                                    <Input
+                                      type="number"
+                                      value={editingWL[entry.id]?.losses ?? entry.losses}
+                                      onChange={(e) => setEditingWL((prev) => ({ ...prev, [entry.id]: { losses: e.target.value, wins: prev[entry.id]?.wins ?? String(entry.wins) } }))}
+                                      onBlur={(e) => {
+                                        updateEntry(entry.id, "losses", parseInt(e.target.value) || 0);
+                                        setEditingWL((prev) => { const n = { ...prev }; delete n[entry.id]; return n; });
+                                      }}
+                                      className="w-11 h-7 text-center bg-white/5 border-none font-bold p-0 text-white text-sm"
+                                    />
+                                  </div>
+                                ) : (
+                                  <span className="font-black tabular-nums text-base text-white">{entry.wins}-{entry.losses}</span>
+                                )}
+                              </td>
+
+                              {/* PD */}
+                              <td className="px-5 py-4 text-center">
+                                {isAdmin ? (
+                                  <Input
+                                    type="text"
+                                    value={editingPD[entry.id] ?? entry.pointDifferential ?? 0}
+                                    onChange={(e) => setEditingPD({ ...editingPD, [entry.id]: e.target.value })}
+                                    onBlur={(e) => {
+                                      updateEntry(entry.id, "pointDifferential", parseInt(e.target.value) || 0);
+                                      const n = { ...editingPD };
+                                      delete n[entry.id];
+                                      setEditingPD(n);
+                                    }}
+                                    className="w-14 h-7 mx-auto text-center bg-white/5 border-none font-bold p-0 text-white text-sm"
+                                  />
+                                ) : (
+                                  <span className={`font-bold tabular-nums text-sm ${(entry.pointDifferential ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {(entry.pointDifferential ?? 0) > 0 ? '+' : ''}{entry.pointDifferential ?? 0}
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Admin ops */}
+                              {isAdmin && (
+                                <td className="px-5 py-4 text-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => deleteEntry(entry.id)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors h-8 w-8"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
