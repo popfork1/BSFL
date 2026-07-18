@@ -51,14 +51,33 @@ export function Sidebar() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-b border-orange-500/20 z-[100]">
+    <header className="fixed top-0 left-0 right-0 z-[100]" style={{
+      background: 'linear-gradient(180deg, hsl(268 38% 5% / 0.97) 0%, hsl(268 38% 4% / 0.95) 100%)',
+      borderBottom: '1px solid transparent',
+      backgroundClip: 'padding-box',
+      boxShadow: '0 1px 0 0 rgba(255,87,34,0.20), 0 4px 20px rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(20px)',
+    }}>
       <div className="h-16 px-6 flex items-center gap-8">
+        {/* Logo */}
         <Link href="/">
-          <div className="flex items-center gap-2 cursor-pointer group" data-testid="link-logo">
-            <img src="/logo.png" alt="RFN" className="w-9 h-9 rounded-lg object-cover group-hover:scale-110 transition-transform" />
+          <div className="flex items-center gap-3 cursor-pointer group" data-testid="link-logo">
+            <img 
+              src="/logo.png" 
+              alt="RFN" 
+              className="w-10 h-10 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300"
+              style={{ boxShadow: '0 0 12px rgba(255,87,34,0.35)' }}
+            />
+            <span className="hidden sm:block font-black text-lg tracking-widest uppercase" style={{
+              background: 'linear-gradient(90deg, #FF8C42 0%, #FF2D78 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>RFN</span>
           </div>
         </Link>
 
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -69,9 +88,13 @@ export function Sidebar() {
                   variant="ghost"
                   className={`h-9 px-3.5 font-bold uppercase tracking-wider text-[11px] rounded-lg transition-all ${
                     isActive
-                      ? 'text-orange-300 bg-orange-500/15 border border-orange-500/30'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-orange-500/8'
+                      ? 'text-orange-300 border'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
                   }`}
+                  style={isActive ? {
+                    background: 'linear-gradient(135deg, rgba(255,87,34,0.18) 0%, rgba(255,45,120,0.12) 100%)',
+                    borderColor: 'rgba(255,87,34,0.35)',
+                  } : {}}
                   data-testid={`link-nav-${item.label.toLowerCase()}`}
                 >
                   <Icon className="w-3.5 h-3.5 mr-1.5" />
@@ -82,13 +105,14 @@ export function Sidebar() {
           })}
         </nav>
 
+        {/* Right side */}
         <div className="flex items-center gap-3 ml-auto">
           {isAdmin && (
             <Link href="/admin">
               <Button
                 variant="outline"
                 size="sm"
-                className="font-bold uppercase tracking-wider text-[10px] border-white/20 hover:bg-white/5"
+                className="font-bold uppercase tracking-wider text-[10px] border-orange-500/30 text-orange-300 hover:bg-orange-500/10 hover:border-orange-500/50"
                 data-testid="link-admin"
               >
                 <Shield className="w-3.5 h-3.5 mr-2" />
@@ -100,19 +124,22 @@ export function Sidebar() {
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
               <Link href="/settings">
-                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-lg" data-testid="link-settings">
-                  <Settings className="w-4 h-4 text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-lg text-zinc-400 hover:text-zinc-100" data-testid="link-settings">
+                  <Settings className="w-4 h-4" />
                 </Button>
               </Link>
               <a href="/api/logout" data-testid="link-logout">
-                <Button variant="ghost" size="icon" className="w-9 h-9 text-muted-foreground hover:text-destructive rounded-lg">
+                <Button variant="ghost" size="icon" className="w-9 h-9 text-zinc-400 hover:text-red-400 rounded-lg">
                   <LogOut className="w-4 h-4" />
                 </Button>
               </a>
             </div>
           ) : (
             <a href="/login" data-testid="link-login">
-              <Button className="h-9 px-6 font-bold uppercase tracking-wider text-[11px] rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-400 hover:to-pink-400 shadow-md shadow-orange-500/20">
+              <Button 
+                className="h-9 px-6 font-bold uppercase tracking-wider text-[11px] rounded-lg text-white border-0"
+                style={{ background: 'linear-gradient(135deg, #FF5722 0%, #FF2D78 100%)', boxShadow: '0 0 16px rgba(255,87,34,0.3)' }}
+              >
                 Login
               </Button>
             </a>
@@ -120,7 +147,10 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="lg:hidden flex items-center overflow-x-auto no-scrollbar border-t border-border/50 bg-background/50 backdrop-blur-md h-14 px-4 gap-1">
+      {/* Mobile scrollable nav */}
+      <nav className="lg:hidden flex items-center overflow-x-auto no-scrollbar h-12 px-4 gap-1"
+        style={{ borderTop: '1px solid rgba(255,87,34,0.12)', background: 'rgba(20,8,35,0.6)' }}
+      >
         <div className="flex items-center gap-1.5 min-w-max">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -129,11 +159,13 @@ export function Sidebar() {
               <Link key={item.path} href={item.path}>
                 <Button
                   variant="ghost"
-                  className={`h-10 px-4 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all flex-shrink-0 ${
-                    isActive
-                      ? 'text-foreground bg-white/10 border border-white/20'
-                      : 'text-muted-foreground'
+                  className={`h-9 px-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl transition-all flex-shrink-0 ${
+                    isActive ? 'text-orange-300' : 'text-zinc-400'
                   }`}
+                  style={isActive ? {
+                    background: 'linear-gradient(135deg, rgba(255,87,34,0.18) 0%, rgba(255,45,120,0.12) 100%)',
+                    border: '1px solid rgba(255,87,34,0.35)',
+                  } : {}}
                   data-testid={`link-mobile-${item.label.toLowerCase()}`}
                 >
                   <Icon className="w-4 h-4 mr-1.5" />
@@ -144,10 +176,7 @@ export function Sidebar() {
           })}
           {isAuthenticated && (
             <Link href="/admin">
-              <Button
-                variant="ghost"
-                className="h-10 px-4 font-bold uppercase tracking-wider text-[11px] rounded-xl flex-shrink-0 text-muted-foreground"
-              >
+              <Button variant="ghost" className="h-9 px-3.5 font-bold uppercase tracking-wider text-[11px] rounded-xl flex-shrink-0 text-zinc-400">
                 <Shield className="w-4 h-4 mr-1.5" />
                 Admin
               </Button>
