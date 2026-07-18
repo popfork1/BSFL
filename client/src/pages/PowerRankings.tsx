@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, TrendingUp, TrendingDown, Minus, Star, Plus, ChevronUp, ChevronDown } from "lucide-react";
-import { TEAMS } from "@/lib/teams";
 import type { PowerRanking } from "@shared/schema";
 
 export default function PowerRankings() {
@@ -31,7 +30,7 @@ export default function PowerRankings() {
   });
 
   // Fetch teams from DB so the dropdown shows actual league teams
-  const { data: dbTeams = [] } = useQuery<{ id: string; name: string }[]>({
+  const { data: dbTeams = [] } = useQuery<{ id: string; name: string; logo?: string | null }[]>({
     queryKey: ["/api/teams"],
   });
   const teamNames = dbTeams.map(t => t.name).sort();
@@ -230,8 +229,9 @@ export default function PowerRankings() {
       ) : (
         <div className="space-y-2">
           {sorted.map((entry, i) => {
-            const logoUrl = TEAMS[entry.team as keyof typeof TEAMS];
+            const teamLogo = dbTeams.find(t => t.name === entry.team)?.logo;
             const isTop3 = entry.rank <= 3;
+            const isUrl = teamLogo && (teamLogo.startsWith("http") || teamLogo.startsWith("/") || teamLogo.startsWith("data:"));
             return (
               <Card
                 key={entry.id}
@@ -249,14 +249,14 @@ export default function PowerRankings() {
                   {entry.rank}
                 </div>
 
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
-                    alt={entry.team}
-                    className="w-10 h-10 object-contain"
-                    data-testid={`img-team-${entry.id}`}
-                  />
-                )}
+                <div className="w-10 h-10 flex items-center justify-center shrink-0" data-testid={`img-team-${entry.id}`}>
+                  {teamLogo
+                    ? isUrl
+                      ? <img src={teamLogo} alt={entry.team} className="w-10 h-10 object-contain" />
+                      : <span className="text-2xl leading-none">{teamLogo}</span>
+                    : <Star className="w-5 h-5 text-muted-foreground/30" />
+                  }
+                </div>
 
                 <div className="flex-1 min-w-0">
                   <p className="font-black uppercase tracking-wide text-sm truncate" data-testid={`text-team-${entry.id}`}>{entry.team}</p>
