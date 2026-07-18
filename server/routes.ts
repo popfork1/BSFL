@@ -511,6 +511,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/players/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      if (req.session?.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { name, role } = req.body;
+      if (!name || typeof name !== "string" || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      const updated = await storage.updatePlayer(req.params.id, { name: name.trim(), role: role ?? "player" });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating player:", error);
+      res.status(400).json({ message: "Failed to update player" });
+    }
+  });
+
   app.delete("/api/players/:id", isAuthenticated, async (req: any, res) => {
     try {
       if (req.session?.role !== "admin") {

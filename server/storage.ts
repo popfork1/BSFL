@@ -173,6 +173,7 @@ export interface IStorage {
   updateTeam(id: string, data: Partial<Team>): Promise<Team>;
   deleteTeam(id: string): Promise<void>;
   createPlayer(player: InsertPlayer): Promise<Player>;
+  updatePlayer(id: string, data: Partial<Pick<Player, "name" | "role">>): Promise<Player>;
   deletePlayer(id: string): Promise<void>;
 
   // Bet resolution
@@ -799,6 +800,11 @@ export class DatabaseStorage implements IStorage {
   async createPlayer(playerData: InsertPlayer): Promise<Player> {
     const [player] = await db.insert(players).values(cleanObject(playerData) as InsertPlayer).returning();
     return player;
+  }
+
+  async updatePlayer(id: string, data: Partial<Pick<Player, "name" | "role">>): Promise<Player> {
+    const [updated] = await db.update(players).set(data).where(eq(players.id, id)).returning();
+    return updated;
   }
 
   async deletePlayer(id: string): Promise<void> {

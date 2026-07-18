@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import {
   Plus, Trash2, Edit, Save, ShieldCheck, Trophy, Calendar,
   Users, Layers, ChevronDown, ChevronUp, CheckCircle2, Shirt, UserPlus,
-  Upload, ImageIcon, BarChart3, X, Newspaper
+  Upload, ImageIcon, BarChart3, X, Newspaper, Pencil
 } from "lucide-react";
 import type { PlayerStats } from "@shared/schema";
 
@@ -672,6 +672,8 @@ function ScoresManager() {
 const PLAYER_ROLES = [
   { value: "player", label: "Player" },
   { value: "head_coach", label: "Head Coach" },
+  { value: "assistant_coach", label: "Assistant Coach" },
+  { value: "general_manager", label: "General Manager" },
   { value: "franchise_owner", label: "Franchise Owner" },
 ] as const;
 
@@ -683,6 +685,9 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
   const { toast } = useToast();
   const [playerName, setPlayerName] = useState("");
   const [playerRole, setPlayerRole] = useState("player");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("player");
 
   const { data: players = [], isLoading } = useQuery<Player[]>({
     queryKey: ["/api/teams", teamId, "players"],
@@ -695,11 +700,7 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/players", {
-        name: playerName.trim(),
-        role: playerRole,
-        teamId,
-      });
+      await apiRequest("POST", "/api/players", { name: playerName.trim(), role: playerRole, teamId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "players"] });
@@ -709,14 +710,32 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
     onError: () => toast({ title: "Error", description: "Failed to add player", variant: "destructive" }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, name, role }: { id: string; name: string; role: string }) => {
+      await apiRequest("PATCH", `/api/players/${id}`, { name, role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "players"] });
+      toast({ title: "Saved", description: "Roster member updated" });
+      setEditingId(null);
+    },
+    onError: () => toast({ title: "Error", description: "Failed to update", variant: "destructive" }),
+  });
+
   const removeMutation = useMutation({
     mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/players/${id}`, undefined); },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams", teamId, "players"] });
-      toast({ title: "Success", description: "Player removed" });
+      toast({ title: "Success", description: "Removed from roster" });
     },
     onError: () => toast({ title: "Error", description: "Failed to remove player", variant: "destructive" }),
   });
+
+  const startEdit = (p: Player) => {
+    setEditingId(p.id);
+    setEditName(p.name);
+    setEditRole(p.role ?? "player");
+  };
 
   return (
     <div className="border-t bg-muted/20 p-5 space-y-4">
@@ -724,16 +743,18 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
         {teamName} Roster
       </p>
 
+      {/* Add row */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Input
-          placeholder="Player name"
+          placeholder="Name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && playerName.trim()) addMutation.mutate(); }}
           data-testid={`input-player-name-${teamId}`}
           className="flex-1"
         />
         <Select value={playerRole} onValueChange={setPlayerRole}>
-          <SelectTrigger className="w-40" data-testid={`select-player-role-${teamId}`}>
+          <SelectTrigger className="w-44" data-testid={`select-player-role-${teamId}`}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -753,31 +774,63 @@ function PlayersEditor({ teamId, teamName }: { teamId: string; teamName: string 
         </Button>
       </div>
 
+      {/* Roster list */}
       {isLoading ? (
-        <p className="text-xs text-muted-foreground">Loading players...</p>
+        <p className="text-xs text-muted-foreground">Loading...</p>
       ) : players.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic">No players on this roster yet.</p>
+        <p className="text-xs text-muted-foreground italic">No roster members yet.</p>
       ) : (
         <div className="space-y-2">
-          {players.map((p) => (
-            <div key={p.id} className="flex items-center justify-between p-3 bg-background rounded-md border" data-testid={`player-row-${p.id}`}>
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-sm">{p.name}</span>
-                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider">
-                  {roleLabel(p.role)}
-                </Badge>
+          {players.map((p) =>
+            editingId === p.id ? (
+              /* ── Edit row ── */
+              <div key={p.id} className="flex flex-col sm:flex-row gap-2 p-3 bg-background rounded-md border border-primary/40" data-testid={`player-edit-${p.id}`}>
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && editName.trim()) updateMutation.mutate({ id: p.id, name: editName.trim(), role: editRole }); if (e.key === "Escape") setEditingId(null); }}
+                  className="flex-1 h-8 text-sm"
+                  autoFocus
+                />
+                <Select value={editRole} onValueChange={setEditRole}>
+                  <SelectTrigger className="w-44 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLAYER_ROLES.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-1">
+                  <Button size="sm" className="h-8 px-3" onClick={() => { if (editName.trim()) updateMutation.mutate({ id: p.id, name: editName.trim(), role: editRole }); }} disabled={updateMutation.isPending || !editName.trim()}>
+                    Save
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-8 px-3" onClick={() => setEditingId(null)}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => removeMutation.mutate(p.id)}
-                disabled={removeMutation.isPending}
-                data-testid={`button-remove-player-${p.id}`}
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
+            ) : (
+              /* ── Display row ── */
+              <div key={p.id} className="flex items-center justify-between p-3 bg-background rounded-md border" data-testid={`player-row-${p.id}`}>
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-sm">{p.name}</span>
+                  <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider">
+                    {roleLabel(p.role)}
+                  </Badge>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => startEdit(p)} data-testid={`button-edit-player-${p.id}`}>
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                  <Button size="sm" variant="destructive" className="h-7 w-7 p-0" onClick={() => removeMutation.mutate(p.id)} disabled={removeMutation.isPending} data-testid={`button-remove-player-${p.id}`}>
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            )
+          )}
         </div>
       )}
     </div>
