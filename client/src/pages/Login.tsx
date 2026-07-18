@@ -77,7 +77,7 @@ export default function Login() {
           <div className="mb-10 text-center space-y-4">
             <Badge className="bg-primary/10 text-primary border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-widest">
               <Sparkles className="w-3.5 h-3.5 mr-2" />
-              BSFL
+              RFN
             </Badge>
             <h1 className="text-4xl font-black italic uppercase tracking-tighter">
               {isSignup ? "Join the" : "Welcome"} <span className="text-primary">Back</span>
@@ -185,7 +185,7 @@ export default function Login() {
             </button>
           </div>
           
-          <div className="absolute -bottom-12 -right-12 text-[120px] opacity-[0.03] select-none font-black italic pointer-events-none">BSFL</div>
+          <div className="absolute -bottom-12 -right-12 text-[120px] opacity-[0.03] select-none font-black italic pointer-events-none">RFN</div>
         </Card>
       </div>
     </div>

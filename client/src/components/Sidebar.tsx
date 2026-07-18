@@ -51,11 +51,11 @@ export function Sidebar() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-b border-border/50 z-[100]">
+    <header className="fixed top-0 left-0 right-0 bg-background/90 backdrop-blur-xl border-b border-orange-500/20 z-[100]">
       <div className="h-16 px-6 flex items-center gap-8">
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer group" data-testid="link-logo">
-            <img src="/logo.png" alt="BSFL" className="w-9 h-9 rounded-lg object-cover group-hover:scale-110 transition-transform" />
+            <img src="/logo.png" alt="RFN" className="w-9 h-9 rounded-lg object-cover group-hover:scale-110 transition-transform" />
           </div>
         </Link>
 
@@ -69,8 +69,8 @@ export function Sidebar() {
                   variant="ghost"
                   className={`h-9 px-3.5 font-bold uppercase tracking-wider text-[11px] rounded-lg transition-all ${
                     isActive
-                      ? 'text-foreground bg-white/10 border border-white/20'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                      ? 'text-orange-300 bg-orange-500/15 border border-orange-500/30'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-orange-500/8'
                   }`}
                   data-testid={`link-nav-${item.label.toLowerCase()}`}
                 >
@@ -112,7 +112,7 @@ export function Sidebar() {
             </div>
           ) : (
             <a href="/login" data-testid="link-login">
-              <Button className="h-9 px-6 font-bold uppercase tracking-wider text-[11px] rounded-lg bg-white text-black hover:bg-white/90">
+              <Button className="h-9 px-6 font-bold uppercase tracking-wider text-[11px] rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-400 hover:to-pink-400 shadow-md shadow-orange-500/20">
                 Login
               </Button>
             </a>

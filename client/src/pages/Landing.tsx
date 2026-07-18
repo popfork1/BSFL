@@ -73,24 +73,28 @@ export default function Landing() {
 
         {/* Hero Section */}
         <section className="relative">
-          <Card className="relative overflow-hidden border-white/10 bg-card/40 backdrop-blur-3xl p-8 md:p-12 lg:p-16 rounded-3xl">
+          <Card className="relative overflow-hidden border-orange-500/20 bg-card/40 backdrop-blur-3xl p-8 md:p-12 lg:p-16 rounded-3xl">
+            {/* Sunset gradient glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 via-pink-600/5 to-purple-700/10 pointer-events-none" />
+            <div className="absolute -top-32 -right-32 w-96 h-96 bg-orange-500/15 blur-[100px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-purple-700/10 blur-[80px] rounded-full pointer-events-none" />
             <div className="grid lg:grid-cols-2 gap-12 items-center relative z-10">
               <div className="space-y-8">
-                <Badge className="bg-white/10 text-foreground border-white/20 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest">
+                <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest">
                   <Sparkles className="w-3.5 h-3.5 mr-2" />
                   Season Live Now
                 </Badge>
                 <h1 className="text-4xl sm:text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.9] text-foreground">
-                  The Hub <br /><span className="text-white/40">of BSFL</span>
+                  The Hub <br /><span className="bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">of RFN</span>
                 </h1>
                 <p className="text-base md:text-lg text-muted-foreground font-medium max-w-md leading-relaxed">
-                  Your home for live scores, standings, team news, and everything happening in the BSFL.
+                  Your home for live scores, standings, team news, and everything happening in the RFN.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     size="lg"
                     onClick={() => setLocation("/scores")}
-                    className="h-14 px-8 rounded-full font-black uppercase tracking-widest text-xs bg-white text-black hover:bg-white/90 hover:scale-105 transition-transform w-full sm:w-auto"
+                    className="h-14 px-8 rounded-full font-black uppercase tracking-widest text-xs bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-400 hover:to-pink-400 hover:scale-105 transition-all shadow-lg shadow-orange-500/25 w-full sm:w-auto"
                     data-testid="button-live-scores"
                   >
                     <Zap className="w-4 h-4 mr-2" />
@@ -100,7 +104,7 @@ export default function Landing() {
                     size="lg"
                     variant="outline"
                     onClick={() => setLocation("/schedule")}
-                    className="h-14 px-8 rounded-full font-black uppercase tracking-widest text-xs border-white/15 hover:bg-white/5 transition-all w-full sm:w-auto"
+                    className="h-14 px-8 rounded-full font-black uppercase tracking-widest text-xs border-orange-500/30 hover:bg-orange-500/10 hover:border-orange-500/50 transition-all w-full sm:w-auto"
                     data-testid="button-full-schedule"
                   >
                     Full Schedule
@@ -109,22 +113,22 @@ export default function Landing() {
               </div>
 
               <div className="hidden lg:block relative">
-                <div className="absolute -inset-20 bg-white/5 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute -inset-20 bg-orange-500/8 blur-[120px] rounded-full animate-pulse" />
                 <div className="relative grid grid-cols-2 gap-4">
-                  <Card className="p-8 bg-white/5 backdrop-blur-md border-white/10 rotate-3 translate-y-8">
-                    <Trophy className="w-12 h-12 text-white/60 mb-4" />
+                  <Card className="p-8 bg-orange-500/10 backdrop-blur-md border-orange-500/20 rotate-3 translate-y-8">
+                    <Trophy className="w-12 h-12 text-orange-400/70 mb-4" />
                     <p className="text-3xl font-black italic">W{currentWeek}</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Current Week</p>
                   </Card>
-                  <Card className="p-8 bg-white/5 backdrop-blur-md border-white/10 -rotate-3">
-                    <Zap className="w-12 h-12 text-white/60 mb-4" />
+                  <Card className="p-8 bg-purple-700/10 backdrop-blur-md border-purple-500/20 -rotate-3">
+                    <Zap className="w-12 h-12 text-purple-400/70 mb-4" />
                     <p className="text-3xl font-black italic">{liveGames.length}</p>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Live Games</p>
                   </Card>
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-24 -right-24 text-[300px] opacity-[0.02] select-none font-black italic pointer-events-none">BSFL</div>
+            <div className="absolute -bottom-24 -right-24 text-[300px] opacity-[0.02] select-none font-black italic pointer-events-none">RFN</div>
           </Card>
         </section>
 

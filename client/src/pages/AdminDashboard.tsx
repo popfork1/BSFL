@@ -1141,6 +1141,19 @@ function StatsManager() {
     onError: () => toast({ title: "Error", description: "Failed to delete", variant: "destructive" }),
   });
 
+  const clearAllStatsMutation = useMutation({
+    mutationFn: async () => {
+      for (const stat of playerStats) {
+        await apiRequest("DELETE", `/api/player-stats/${stat.id}`, undefined);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/player-stats"] });
+      toast({ title: "Cleared", description: "All stats removed for this player" });
+    },
+    onError: () => toast({ title: "Error", description: "Failed to clear stats", variant: "destructive" }),
+  });
+
   return (
     <div className="space-y-6">
       {/* Step 1 — Pick a player */}
@@ -1204,6 +1217,23 @@ function StatsManager() {
                 <Plus className="w-4 h-4" />
                 Add Week
               </Button>
+              {playerStats.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => {
+                    if (confirm(`Delete ALL stats for ${selectedPlayer.name}? This cannot be undone.`)) {
+                      clearAllStatsMutation.mutate();
+                    }
+                  }}
+                  disabled={clearAllStatsMutation.isPending}
+                  data-testid="button-clear-all-stats"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {clearAllStatsMutation.isPending ? "Clearing…" : "Clear All Stats"}
+                </Button>
+              )}
             </div>
           </div>
 

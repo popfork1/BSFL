@@ -23,7 +23,7 @@ const roles = [
     id: "media",
     title: "Media",
     icon: Mic2,
-    description: "Cover the BSFL as a reporter, content creator, or social media manager. Bring the action to the fans.",
+    description: "Cover the RFN as a reporter, content creator, or social media manager. Bring the action to the fans.",
     responsibilities: ["Game coverage", "Social media content", "Video production", "Written reports"],
     badge: "Media & Press",
   },
@@ -31,7 +31,7 @@ const roles = [
     id: "referee",
     title: "Referee",
     icon: Flag,
-    description: "Officiate BSFL games and ensure fair play. Strong knowledge of football rules required.",
+    description: "Officiate RFN games and ensure fair play. Strong knowledge of football rules required.",
     responsibilities: ["Officiating games", "Rules enforcement", "Flag calls", "Post-game reports"],
     badge: "On-Field",
   },
@@ -39,7 +39,7 @@ const roles = [
     id: "streamer",
     title: "Streamer",
     icon: Video,
-    description: "Broadcast BSFL games live. Provide commentary and bring the in-person experience to fans watching online.",
+    description: "Broadcast RFN games live. Provide commentary and bring the in-person experience to fans watching online.",
     responsibilities: ["Live game streaming", "Play-by-play commentary", "Stream setup", "Viewer engagement"],
     badge: "Broadcast",
   },
@@ -47,7 +47,7 @@ const roles = [
     id: "franchise",
     title: "Franchise Owner",
     icon: Building2,
-    description: "Own and manage your own BSFL franchise. Build your roster, develop your team identity, and compete for the championship.",
+    description: "Own and manage your own RFN franchise. Build your roster, develop your team identity, and compete for the championship.",
     responsibilities: ["Roster management", "Team branding", "Player recruitment", "Franchise operations"],
     badge: "Ownership",
   },
@@ -91,7 +91,7 @@ export default function Applications() {
             Now Accepting Applications
           </Badge>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black italic uppercase tracking-tighter leading-none">
-            Join the <br /><span className="text-white/40">BSFL</span>
+            Join the <br /><span className="text-white/40">RFN</span>
           </h1>
           <p className="text-base text-muted-foreground font-medium max-w-xl leading-relaxed">
             Be a part of the league — whether on the field, behind the camera, or in the front office.

@@ -14,8 +14,6 @@ import { Trash2, TrendingUp, TrendingDown, Minus, Star, Plus, ChevronUp, Chevron
 import { TEAMS } from "@/lib/teams";
 import type { PowerRanking } from "@shared/schema";
 
-const TEAM_NAMES = Object.keys(TEAMS).sort();
-
 export default function PowerRankings() {
   const { isAuthenticated, user } = useAuth();
   const isAdmin = isAuthenticated && (user as any)?.role === "admin";
@@ -31,6 +29,12 @@ export default function PowerRankings() {
     trendAmount: "0",
     note: "",
   });
+
+  // Fetch teams from DB so the dropdown shows actual league teams
+  const { data: dbTeams = [] } = useQuery<{ id: string; name: string }[]>({
+    queryKey: ["/api/teams"],
+  });
+  const teamNames = dbTeams.map(t => t.name).sort();
 
   const { data: rankings = [], isLoading } = useQuery<PowerRanking[]>({
     queryKey: ["/api/power-rankings", selectedWeek],
@@ -160,7 +164,7 @@ export default function PowerRankings() {
                   <SelectValue placeholder="Select team" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TEAM_NAMES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {teamNames.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
